@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Availability, AvailabilityDocument, TimeBlock } from './schemas/availability.schema';
-import { addDays, getStartOfDay } from '@synkt/shared';
+import { addDays, getStartOfDay, formatTime } from '@synkt/shared';
 
 @Injectable()
 export class CalendarService {
@@ -62,10 +62,10 @@ export class CalendarService {
       // Generate random busy blocks (simulating meetings)
       const busyBlocks: TimeBlock[] = [];
 
-      // Morning meeting (9-10am) on weekdays
+      // Morning meeting (8-10am) on weekdays
       if (date.getDay() >= 1 && date.getDay() <= 5 && Math.random() > 0.3) {
         busyBlocks.push({
-          start: new Date(date.setHours(9, 0, 0, 0)),
+          start: new Date(date.setHours(8, 0, 0, 0)),
           end: new Date(date.setHours(10, 0, 0, 0)),
         });
       }
@@ -83,6 +83,14 @@ export class CalendarService {
         busyBlocks.push({
           start: new Date(date.setHours(14, 0, 0, 0)),
           end: new Date(date.setHours(15, 0, 0, 0)),
+        });
+      }
+
+      // Evening meeting (7-9pm) on some days
+      if (Math.random() > 0.7) {
+        busyBlocks.push({
+          start: new Date(date.setHours(19, 0, 0, 0)),
+          end: new Date(date.setHours(21, 0, 0, 0)),
         });
       }
 
@@ -113,10 +121,11 @@ export class CalendarService {
     // For each day in the range
     let currentDate = getStartOfDay(startDate);
     while (currentDate <= endDate) {
-      // Check common free times (9am-6pm in 1-hour slots)
-      for (let hour = 9; hour < 18; hour++) {
+      // Check common free times (24 hours in 30-minute slots)
+      // Total 15-minute segments in a day = 24 * 4 = 96. Let's do 30 mins for now (48 slots)
+      for (let i = 0; i < 24 * 2; i++) {
         const slotStart = new Date(currentDate);
-        slotStart.setHours(hour, 0, 0, 0);
+        slotStart.setMinutes(i * 30);
         const slotEnd = new Date(slotStart);
         slotEnd.setMinutes(slotEnd.getMinutes() + durationMinutes);
 
@@ -148,7 +157,7 @@ export class CalendarService {
           // At least 50% available
           bestTimes.push({
             date: new Date(currentDate),
-            startTime: `${hour.toString().padStart(2, '0')}:00`,
+            startTime: formatTime(slotStart),
             availableMembers,
           });
         }
