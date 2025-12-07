@@ -74,7 +74,7 @@ export class GroupsService {
     const bestTimes = await this.calendarService.findBestTimes(memberIds, startDate, endDate);
 
     // Convert to ProposedTime format and update group
-    const proposedTimes = bestTimes.slice(0, 10).map(time => ({
+    const proposedTimes = bestTimes.slice(0, 5).map(time => ({
       date: time.date,
       startTime: time.startTime,
       availableMembers: time.availableMembers.map(id => new Types.ObjectId(id)),

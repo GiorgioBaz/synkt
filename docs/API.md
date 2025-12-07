@@ -129,7 +129,7 @@ GET /calendar/best-times?userIds=id1,id2,id3&startDate=2024-01-01&endDate=2024-0
 **Algorithm:**
 - Returns times when ≥50% of members are available
 - Sorted by number of available members (descending)
-- Checks 9am-6pm in 1-hour slots
+- Checks 24 hours for available slots
 
 ---
 
