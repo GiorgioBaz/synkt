@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
@@ -13,11 +13,6 @@ import { GroupsModule } from './groups/groups.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    // TODO: Uncomment when MongoDB is ready! Either:
-    // 1. Install MongoDB locally (it will connect to mongodb://localhost:27017/synkt)
-    // 2. Create apps/backend/.env with MONGODB_URI for MongoDB Atlas
-    // Then uncomment the MongooseModule and data modules below:
-    /*
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
@@ -25,6 +20,16 @@ import { GroupsModule } from './groups/groups.module';
         return {
           uri,
           serverSelectionTimeoutMS: 5000,
+          connectionFactory: (connection) => {
+            const logger = new Logger('MongooseModule');
+            if (connection.readyState === 1) {
+              logger.log('MongoDB is connected');
+            }
+            connection.on('connected', () => {
+              logger.log('MongoDB is connected');
+            });
+            return connection;
+          },
         };
       },
       inject: [ConfigService],
@@ -32,7 +37,6 @@ import { GroupsModule } from './groups/groups.module';
     UsersModule,
     CalendarModule,
     GroupsModule,
-    */
   ],
   controllers: [AppController],
   providers: [AppService],
