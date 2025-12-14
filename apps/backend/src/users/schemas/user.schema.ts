@@ -20,6 +20,12 @@ export class User {
   @Prop({ required: true })
   timezone: string;
 
+  @Prop({ default: 9 })
+  workStartHour: number;
+
+  @Prop({ default: 17 })
+  workEndHour: number;
+
   @Prop()
   googleCalendarRefreshToken?: string;
 
