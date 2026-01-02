@@ -16,23 +16,42 @@ export class UsersService {
     return this.userModel.findOne({ email }).exec();
   }
 
-  async findByAuthProvider(provider: string, providerId: string): Promise<User | null> {
-    return this.userModel.findOne({ authProvider: provider, authProviderId: providerId }).exec();
+  async findByAuthProvider(
+    provider: string,
+    providerId: string,
+  ): Promise<User | null> {
+    return this.userModel
+      .findOne({ authProvider: provider, authProviderId: providerId })
+      .exec();
   }
 
   async findById(id: string): Promise<User | null> {
     return this.userModel.findById(id).exec();
   }
 
-  async updateGoogleRefreshToken(userId: string, refreshToken: string): Promise<User | null> {
+  async updateGoogleRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<User | null> {
     return this.userModel
-      .findByIdAndUpdate(userId, { googleCalendarRefreshToken: refreshToken }, { new: true })
+      .findByIdAndUpdate(
+        userId,
+        { googleCalendarRefreshToken: refreshToken },
+        { new: true },
+      )
       .exec();
   }
 
-  async updateAppleCalendarEnabled(userId: string, enabled: boolean): Promise<User | null> {
+  async updateAppleCalendarEnabled(
+    userId: string,
+    enabled: boolean,
+  ): Promise<User | null> {
     return this.userModel
-      .findByIdAndUpdate(userId, { appleCalendarEnabled: enabled }, { new: true })
+      .findByIdAndUpdate(
+        userId,
+        { appleCalendarEnabled: enabled },
+        { new: true },
+      )
       .exec();
   }
 }
