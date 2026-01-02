@@ -26,17 +26,35 @@ export class CalendarController {
   @Post('mock/:userId')
   @ApiOperation({ summary: 'Generate mock availability data for testing' })
   @ApiQuery({ name: 'days', required: false })
-  async generateMockData(@Param('userId') userId: string, @Query('days') days?: string) {
+  async generateMockData(
+    @Param('userId') userId: string,
+    @Query('days') days?: string,
+  ) {
     const numDays = days ? parseInt(days, 10) : 7;
     return this.calendarService.generateMockAvailability(userId, numDays);
   }
 
+  @Post('sync-google')
+  @ApiOperation({ summary: 'Trigger Google Calendar sync' })
+  @ApiQuery({ name: 'userId', required: true })
+  async syncGoogle(@Query('userId') userId: string) {
+    return this.calendarService.syncGoogleCalendar(userId);
+  }
+
   @Get('best-times')
   @ApiOperation({ summary: 'Find best meeting times for multiple users' })
-  @ApiQuery({ name: 'userIds', required: true, description: 'Comma-separated user IDs' })
+  @ApiQuery({
+    name: 'userIds',
+    required: true,
+    description: 'Comma-separated user IDs',
+  })
   @ApiQuery({ name: 'startDate', required: true })
   @ApiQuery({ name: 'endDate', required: true })
-  @ApiQuery({ name: 'duration', required: false, description: 'Duration in minutes' })
+  @ApiQuery({
+    name: 'duration',
+    required: false,
+    description: 'Duration in minutes',
+  })
   async findBestTimes(
     @Query('userIds') userIds: string,
     @Query('startDate') startDate: string,
