@@ -1,20 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Availability, AvailabilityDocument, TimeBlock } from './schemas/availability.schema';
+import {
+  Availability,
+  AvailabilityDocument,
+  TimeBlock,
+} from './schemas/availability.schema';
 import { UsersService } from '../users/users.service';
 import { addDays, addMinutes, isBefore, getDay, format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { getStartOfDay, formatTime } from '@synkt/shared';
+import { GoogleCalendarService } from './google-calendar.service';
 
 @Injectable()
 export class CalendarService {
   private readonly SYDNEY_TZ = 'Australia/Sydney';
 
   constructor(
-    @InjectModel(Availability.name) private availabilityModel: Model<AvailabilityDocument>,
+    @InjectModel(Availability.name)
+    private availabilityModel: Model<AvailabilityDocument>,
     private usersService: UsersService,
-  ) { }
+    private googleCalendarService: GoogleCalendarService,
+  ) {}
 
   /**
    * Get availability for a user within a date range
@@ -55,9 +62,48 @@ export class CalendarService {
   }
 
   /**
+   * Sync Google Calendar events for a user
+   */
+  async syncGoogleCalendar(userId: string): Promise<Availability[]> {
+    const user = await this.usersService.findById(userId);
+    if (!user || !user.googleCalendarRefreshToken) {
+      throw new Error('User not connected to Google Calendar');
+    }
+
+    const startDate = getStartOfDay(new Date());
+    const endDate = addDays(startDate, 30);
+
+    const busyBlocks = await this.googleCalendarService.getEvents(
+      user.googleCalendarRefreshToken,
+      startDate,
+      endDate,
+    );
+
+    const results: Availability[] = [];
+
+    for (let i = 0; i < 30; i++) {
+      const date = addDays(startDate, i);
+      const dayStart = getStartOfDay(date);
+      const dayEnd = addDays(dayStart, 1);
+
+      const daysBlocks = busyBlocks.filter((b) => {
+        return b.start < dayEnd && b.end > dayStart;
+      });
+
+      const av = await this.saveAvailability(userId, date, daysBlocks);
+      results.push(av);
+    }
+
+    return results;
+  }
+
+  /**
    * Generate mock availability data for testing
    */
-  async generateMockAvailability(userId: string, days: number = 7): Promise<Availability[]> {
+  async generateMockAvailability(
+    userId: string,
+    days: number = 7,
+  ): Promise<Availability[]> {
     const today = getStartOfDay(new Date());
     const mockData: Availability[] = [];
 
@@ -91,7 +137,11 @@ export class CalendarService {
         });
       }
 
-      const availability = await this.saveAvailability(userId, date, busyBlocks);
+      const availability = await this.saveAvailability(
+        userId,
+        date,
+        busyBlocks,
+      );
       mockData.push(availability);
     }
 
@@ -107,8 +157,17 @@ export class CalendarService {
     startDate: Date,
     endDate: Date,
     durationMinutes: number = 60,
-  ): Promise<{ date: Date; startTime: string; availableMembers: string[]; score: number }[]> {
-    const users = await Promise.all(userIds.map((id) => this.usersService.findById(id)));
+  ): Promise<
+    {
+      date: Date;
+      startTime: string;
+      availableMembers: string[];
+      score: number;
+    }[]
+  > {
+    const users = await Promise.all(
+      userIds.map((id) => this.usersService.findById(id)),
+    );
     const validUsers = users.filter((u) => !!u);
     const validUserIds = validUsers.map((u) => (u as any)._id.toString());
 
@@ -124,7 +183,9 @@ export class CalendarService {
 
     // Fetch Availabilities
     const availabilitiesList = await Promise.all(
-      validUserIds.map((id) => this.getAvailability(id, actualStart, actualEnd)),
+      validUserIds.map((id) =>
+        this.getAvailability(id, actualStart, actualEnd),
+      ),
     );
 
     const bestTimes: {
@@ -186,7 +247,10 @@ export class CalendarService {
           // Basic day checking - comparing timestamps roughly or strict date objects?
           // The saveAvailability normalizes to getStartOfDay(date).
           // So we should compare getStartOfDay(slotStart)
-          return getStartOfDay(a.date).getTime() === getStartOfDay(slotStart).getTime();
+          return (
+            getStartOfDay(a.date).getTime() ===
+            getStartOfDay(slotStart).getTime()
+          );
         });
 
         if (!dayAvail) {
@@ -223,7 +287,9 @@ export class CalendarService {
       // Tier 2: High Quality Time (Fri/Sat 6pm - 10pm Sydney Time)
       const sydneyDay = getDay(sydneyTime); // 0=Sun, 5=Fri, 6=Sat
       const isWeekendEvening =
-        (sydneyDay === 5 || sydneyDay === 6) && sydneyHour >= 18 && sydneyHour < 22;
+        (sydneyDay === 5 || sydneyDay === 6) &&
+        sydneyHour >= 18 &&
+        sydneyHour < 22;
 
       if (isWeekendEvening) {
         score += 500;

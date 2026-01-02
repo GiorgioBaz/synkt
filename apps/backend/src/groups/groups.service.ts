@@ -11,8 +11,12 @@ export class GroupsService {
     private calendarService: CalendarService,
   ) {}
 
-  async create(name: string, createdBy: string, memberIds: string[]): Promise<Group> {
-    const members = memberIds.map(userId => ({
+  async create(
+    name: string,
+    createdBy: string,
+    memberIds: string[],
+  ): Promise<Group> {
+    const members = memberIds.map((userId) => ({
       userId: new Types.ObjectId(userId),
       joinedAt: new Date(),
       hasConfirmedAvailability: false,
@@ -28,7 +32,11 @@ export class GroupsService {
   }
 
   async findById(id: string): Promise<Group | null> {
-    return this.groupModel.findById(id).populate('members.userId').populate('createdBy').exec();
+    return this.groupModel
+      .findById(id)
+      .populate('members.userId')
+      .populate('createdBy')
+      .exec();
   }
 
   async findByUserId(userId: string): Promise<Group[]> {
@@ -62,22 +70,31 @@ export class GroupsService {
       .exec();
   }
 
-  async calculateBestTimes(groupId: string, days: number = 7): Promise<Group | null> {
+  async calculateBestTimes(
+    groupId: string,
+    days: number = 7,
+  ): Promise<Group | null> {
     const group = await this.findById(groupId);
     if (!group) return null;
 
-    const memberIds = group.members.map(m => m.userId.toString());
+    const memberIds = group.members.map((m) => m.userId.toString());
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + days);
 
-    const bestTimes = await this.calendarService.findBestTimes(memberIds, startDate, endDate);
+    const bestTimes = await this.calendarService.findBestTimes(
+      memberIds,
+      startDate,
+      endDate,
+    );
 
     // Convert to ProposedTime format and update group
-    const proposedTimes = bestTimes.slice(0, 5).map(time => ({
+    const proposedTimes = bestTimes.slice(0, 5).map((time) => ({
       date: time.date,
       startTime: time.startTime,
-      availableMembers: time.availableMembers.map(id => new Types.ObjectId(id)),
+      availableMembers: time.availableMembers.map(
+        (id) => new Types.ObjectId(id),
+      ),
       votes: [],
     }));
 
@@ -88,14 +105,19 @@ export class GroupsService {
       .exec();
   }
 
-  async vote(groupId: string, userId: string, timeIndex: number, vote: 'yes' | 'no' | 'maybe'): Promise<Group | null> {
+  async vote(
+    groupId: string,
+    userId: string,
+    timeIndex: number,
+    vote: 'yes' | 'no' | 'maybe',
+  ): Promise<Group | null> {
     const group = await this.findById(groupId);
     if (!group || !group.proposedTimes[timeIndex]) return null;
 
     // Remove existing vote from this user for this time
-    group.proposedTimes[timeIndex].votes = group.proposedTimes[timeIndex].votes.filter(
-      v => v.userId.toString() !== userId,
-    );
+    group.proposedTimes[timeIndex].votes = group.proposedTimes[
+      timeIndex
+    ].votes.filter((v) => v.userId.toString() !== userId);
 
     // Add new vote
     group.proposedTimes[timeIndex].votes.push({
@@ -104,7 +126,11 @@ export class GroupsService {
     });
 
     return this.groupModel
-      .findByIdAndUpdate(groupId, { proposedTimes: group.proposedTimes }, { new: true })
+      .findByIdAndUpdate(
+        groupId,
+        { proposedTimes: group.proposedTimes },
+        { new: true },
+      )
       .populate('members.userId')
       .populate('createdBy')
       .exec();

@@ -23,7 +23,9 @@ async function bootstrap() {
   // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Synkt API')
-    .setDescription('Calendar sync API for finding the best times to meet with friends')
+    .setDescription(
+      'Calendar sync API for finding the best times to meet with friends',
+    )
     .setVersion('0.1.0')
     .addTag('users')
     .addTag('calendar')
@@ -40,4 +42,3 @@ async function bootstrap() {
   console.log(`📚 Swagger docs available at http://localhost:${port}/api`);
 }
 bootstrap();
-
