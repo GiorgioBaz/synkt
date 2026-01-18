@@ -1,7 +1,37 @@
 import { api } from './api';
 import { Availability } from '@synkt/shared';
+import * as SecureStore from 'expo-secure-store';
+
+const USER_ID_KEY = 'user_id';
 
 export const calendarService = {
+  /**
+   * Save user ID to secure storage
+   */
+  async saveUserId(userId: string): Promise<void> {
+    await SecureStore.setItemAsync(USER_ID_KEY, userId);
+  },
+
+  /**
+   * Get user ID from secure storage
+   */
+  async getUserId(): Promise<string | null> {
+    return SecureStore.getItemAsync(USER_ID_KEY);
+  },
+
+  /**
+   * Clear user ID from secure storage (logout)
+   */
+  async clearUserId(): Promise<void> {
+    await SecureStore.deleteItemAsync(USER_ID_KEY);
+  },
+
+  /**
+   * Trigger Google Calendar Sync
+   */
+  async syncGoogleCalendar(userId: string): Promise<void> {
+    await api.post(`/calendar/sync-google?userId=${userId}`);
+  },
   /**
    * Get availability for a user within a date range
    */
