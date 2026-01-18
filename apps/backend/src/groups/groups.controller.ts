@@ -10,7 +10,12 @@ export class GroupsController {
   @Post()
   @ApiOperation({ summary: 'Create a new group' })
   async create(
-    @Body() createGroupDto: { name: string; createdBy: string; memberIds: string[] },
+    @Body()
+    createGroupDto: {
+      name: string;
+      createdBy: string;
+      memberIds: string[];
+    },
   ) {
     return this.groupsService.create(
       createGroupDto.name,
@@ -33,7 +38,10 @@ export class GroupsController {
 
   @Post(':id/calculate-times')
   @ApiOperation({ summary: 'Calculate best meeting times for a group' })
-  async calculateBestTimes(@Param('id') id: string, @Query('days') days?: string) {
+  async calculateBestTimes(
+    @Param('id') id: string,
+    @Query('days') days?: string,
+  ) {
     const numDays = days ? parseInt(days, 10) : 7;
     return this.groupsService.calculateBestTimes(id, numDays);
   }
@@ -42,8 +50,18 @@ export class GroupsController {
   @ApiOperation({ summary: 'Vote on a proposed time' })
   async vote(
     @Param('id') id: string,
-    @Body() voteDto: { userId: string; timeIndex: number; vote: 'yes' | 'no' | 'maybe' },
+    @Body()
+    voteDto: {
+      userId: string;
+      timeIndex: number;
+      vote: 'yes' | 'no' | 'maybe';
+    },
   ) {
-    return this.groupsService.vote(id, voteDto.userId, voteDto.timeIndex, voteDto.vote);
+    return this.groupsService.vote(
+      id,
+      voteDto.userId,
+      voteDto.timeIndex,
+      voteDto.vote,
+    );
   }
 }
