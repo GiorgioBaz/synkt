@@ -7,7 +7,7 @@
     "mobile": "pnpm --filter mobile start",
     "backend": "pnpm --filter backend start:dev",
     "dev": "concurrently \"pnpm mobile\" \"pnpm backend\"",
-    "backend-build": "pnpm --filter backend build",
+    "backend-build": "pnpm --filter @synkt/shared build && pnpm --filter backend build",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
