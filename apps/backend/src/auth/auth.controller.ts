@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
@@ -12,16 +12,16 @@ export class AuthController {
     // defaults to Google Strategy
   }
 
+
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   @ApiOperation({ summary: 'Google OAuth callback' })
-  async googleAuthRedirect(@Req() req) {
+  async googleAuthRedirect(@Req() req, @Res() res) {
     // User is validated by GoogleStrategy and populated in req.user
-    // In a real app, we would generate a JWT here and redirect to frontend.
-    // For testing, we just return the user so we can see the ID and Refresh Token.
-    return {
-      message: 'Authentication successful',
-      user: req.user,
-    };
+    const user = req.user as any;
+    
+    // Redirect to mobile app with userId
+    // Deep link scheme: mobile://auth-success?userId=...
+    return res.redirect(`mobile://auth-success?userId=${user._id}`);
   }
 }
