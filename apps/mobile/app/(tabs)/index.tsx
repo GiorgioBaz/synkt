@@ -8,7 +8,7 @@ import { Availability } from '@synkt/shared';
 import { Text, View } from '@/components/Themed';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3000';
+const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
 export default function TabOneScreen() {
   const [userId, setUserId] = useState<string | null>(null);

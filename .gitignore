@@ -61,3 +61,6 @@ data/
 
 # OS
 Thumbs.db
+
+# Dev Scripts
+update-ngrok.js
