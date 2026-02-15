@@ -39,7 +39,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: any,
     done: VerifyCallback,
   ): Promise<any> {
-    this.logger.log(`Validating user. Has Refresh Token? ${!!refreshToken}`);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { name, emails, id } = profile;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
